@@ -27,7 +27,11 @@ export function FileRow({
   onUpdatePassword,
 }: FileRowProps) {
   const canDownload = item.status === "success" && item.outputBlob;
-  const canRetry = item.status === "failed" || item.status === "wrong-password" || item.status === "skipped";
+  const canRetry =
+    item.status === "failed" ||
+    item.status === "wrong-password" ||
+    item.status === "skipped" ||
+    item.status === "cancelled";
 
   return (
     <article className="rounded-lg border border-stone-200 bg-white p-4 shadow-sm">

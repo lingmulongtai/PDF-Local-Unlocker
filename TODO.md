@@ -17,6 +17,7 @@
 - [x] File-level password override
 - [x] Result actions
 - [x] Safety notice
+- [x] Browser compatibility notice
 - [ ] スマホ表示の追加確認
 
 ## Phase 2: 単一PDF処理
@@ -35,7 +36,9 @@
 - [x] 個別ダウンロードを実データに接続する
 - [x] JSZipで成功ファイルを一括ダウンロードする
 - [x] 失敗ファイルだけ再試行できるようにする
+- [x] 処理中キャンセルを実装する
 - [ ] 複数の実PDFで一括処理を確認する
+- [ ] 大きめのPDFでキャンセル後の再試行を確認する
 
 ## Phase 4: 品質向上
 
@@ -43,6 +46,7 @@
 - [ ] エラー文言の改善
 - [ ] Network確認
 - [ ] パスワード保存なしの確認
+- [x] 必須ブラウザ機能の互換性チェックを追加する
 - [ ] READMEの利用手順を実装状況に合わせて更新
 
 ## Phase 5: 公開

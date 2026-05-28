@@ -36,6 +36,11 @@ const statusConfig = {
     icon: AlertTriangle,
     label: "Skipped",
   },
+  cancelled: {
+    className: "border-stone-200 bg-stone-50 text-stone-700",
+    icon: AlertTriangle,
+    label: "Cancelled",
+  },
 } satisfies Record<FileStatus, { className: string; icon: typeof CircleDashed; label: string }>;
 
 export function ProgressPill({ status }: ProgressPillProps) {

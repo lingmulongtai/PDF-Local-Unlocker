@@ -15,7 +15,7 @@ export type UnlockWorkerSuccess = {
 export type UnlockWorkerFailure = {
   type: "failure";
   id: string;
-  code: "wrong-password" | "unsupported" | "qpdf-error" | "unknown";
+  code: "wrong-password" | "unsupported" | "qpdf-error" | "cancelled" | "unknown";
   message: string;
 };
 

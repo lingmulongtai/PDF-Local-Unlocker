@@ -54,6 +54,27 @@ function getWorker() {
   return worker;
 }
 
+export function cancelActiveUnlocks() {
+  if (!worker) {
+    return;
+  }
+
+  const failure: UnlockWorkerFailure = {
+    type: "failure",
+    id: "worker",
+    code: "cancelled",
+    message: "Processing cancelled",
+  };
+
+  for (const request of pending.values()) {
+    request.reject(failure);
+  }
+
+  pending.clear();
+  worker.terminate();
+  worker = null;
+}
+
 export async function unlockPdfInWorker(file: File, password: string, id: string): Promise<ArrayBuffer> {
   const data = await file.arrayBuffer();
   const request: UnlockWorkerRequest = {

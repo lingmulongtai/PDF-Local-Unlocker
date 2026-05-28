@@ -4,7 +4,8 @@ export type FileStatus =
   | "success"
   | "wrong-password"
   | "failed"
-  | "skipped";
+  | "skipped"
+  | "cancelled";
 
 export type FileItem = {
   id: string;
@@ -27,4 +28,5 @@ export type QueueSummary = {
   success: number;
   failed: number;
   skipped: number;
+  cancelled: number;
 };

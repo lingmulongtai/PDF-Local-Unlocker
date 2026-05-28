@@ -1,14 +1,16 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { CompatibilityNotice } from "./components/CompatibilityNotice";
 import { FileDropzone } from "./components/FileDropzone";
 import { FileQueue } from "./components/FileQueue";
 import { Hero } from "./components/Hero";
 import { PasswordPanel } from "./components/PasswordPanel";
 import { ResultActions } from "./components/ResultActions";
 import { SafetyNotice } from "./components/SafetyNotice";
+import { getBrowserSupportIssues } from "./lib/browserSupport";
 import { downloadBlob, makeUnlockedFileName } from "./lib/download";
 import { validatePdfFile } from "./lib/fileValidation";
 import { getPasswordForFile } from "./lib/password";
-import { unlockPdfInWorker } from "./lib/unlockWorkerClient";
+import { cancelActiveUnlocks, unlockPdfInWorker } from "./lib/unlockWorkerClient";
 import { createResultsZip, RESULTS_ZIP_NAME } from "./lib/zip";
 import type { FileItem, QueueSummary } from "./types";
 
@@ -31,6 +33,9 @@ export default function App() {
   const [commonPasswordVisible, setCommonPasswordVisible] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const cancelRequestedRef = useRef(false);
+  const browserSupportIssues = useMemo(() => getBrowserSupportIssues(), []);
+  const canProcess = browserSupportIssues.length === 0;
 
   const summary = useMemo<QueueSummary>(() => {
     const counts = fileItems.reduce(
@@ -50,6 +55,7 @@ export default function App() {
         success: 0,
         failed: 0,
         skipped: 0,
+        cancelled: 0,
       } as QueueSummary,
     );
 
@@ -57,7 +63,11 @@ export default function App() {
   }, [fileItems]);
 
   const hasRetryable = fileItems.some(
-    (item) => item.status === "failed" || item.status === "wrong-password" || item.status === "skipped",
+    (item) =>
+      item.status === "failed" ||
+      item.status === "wrong-password" ||
+      item.status === "skipped" ||
+      item.status === "cancelled",
   );
   const hasSuccess = fileItems.some((item) => item.status === "success" && item.outputBlob);
 
@@ -128,7 +138,7 @@ export default function App() {
   }
 
   async function processQueue(mode: "all" | "retry" | "single", singleId?: string) {
-    if (isProcessing) {
+    if (isProcessing || !canProcess) {
       return;
     }
 
@@ -138,16 +148,27 @@ export default function App() {
       }
 
       if (mode === "retry") {
-        return item.status === "failed" || item.status === "wrong-password" || item.status === "skipped";
+        return (
+          item.status === "failed" ||
+          item.status === "wrong-password" ||
+          item.status === "skipped" ||
+          item.status === "cancelled"
+        );
       }
 
       return item.status !== "success" && item.status !== "processing";
     });
 
     setIsProcessing(true);
+    cancelRequestedRef.current = false;
     setNotice(null);
 
-    for (const item of candidates) {
+    try {
+      for (const item of candidates) {
+        if (cancelRequestedRef.current) {
+          break;
+        }
+
       const password = getPasswordForFile(item, commonPassword);
 
       if (!password) {
@@ -197,17 +218,43 @@ export default function App() {
         });
       } catch (error) {
         const failure = error as { code?: string; message?: string };
-        const status = failure.code === "wrong-password" ? "wrong-password" : "failed";
+        const status =
+          failure.code === "wrong-password" ? "wrong-password" : failure.code === "cancelled" ? "cancelled" : "failed";
 
         updateItem(item.id, (current) => ({
           ...current,
           status,
-          progress: 100,
+          progress: status === "cancelled" ? 0 : 100,
           errorMessage: failure.message ?? "PDF unlock failed",
         }));
-      }
-    }
 
+        if (status === "cancelled") {
+          break;
+        }
+      }
+      }
+    } finally {
+      setIsProcessing(false);
+      cancelRequestedRef.current = false;
+    }
+  }
+
+  function cancelProcessing() {
+    cancelRequestedRef.current = true;
+    cancelActiveUnlocks();
+    setNotice("Processing cancelled. Completed files remain available.");
+    setFileItems((current) =>
+      current.map((item) =>
+        item.status === "processing"
+          ? {
+              ...item,
+              status: "cancelled",
+              progress: 0,
+              errorMessage: "Processing cancelled",
+            }
+          : item,
+      ),
+    );
     setIsProcessing(false);
   }
 
@@ -245,10 +292,11 @@ export default function App() {
     <div className="min-h-screen bg-[linear-gradient(135deg,#f7f7f2_0%,#e8f7ef_44%,#fff7ed_100%)] text-stone-950">
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
         <Hero />
+        <CompatibilityNotice issues={browserSupportIssues} />
 
         <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
           <div className="space-y-5">
-            <FileDropzone disabled={isProcessing} onFilesSelected={addFiles} />
+            <FileDropzone disabled={isProcessing || !canProcess} onFilesSelected={addFiles} />
             {notice ? (
               <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
                 {notice}
@@ -277,11 +325,12 @@ export default function App() {
               onUpdate={setCommonPassword}
             />
             <ResultActions
-              disabled={false}
+              disabled={!canProcess}
               hasFiles={fileItems.length > 0}
               hasRetryable={hasRetryable}
               hasSuccess={hasSuccess}
               isProcessing={isProcessing}
+              onCancel={cancelProcessing}
               onClearAll={clearAll}
               onDownloadZip={() => void downloadZip()}
               onRetryFailed={() => void processQueue("retry")}

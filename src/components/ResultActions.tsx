@@ -8,6 +8,7 @@ type ResultActionsProps = {
   hasSuccess: boolean;
   isProcessing: boolean;
   onClearAll: () => void;
+  onCancel: () => void;
   onDownloadZip: () => void;
   onRetryFailed: () => void;
   onUnlockAll: () => void;
@@ -20,6 +21,7 @@ export function ResultActions({
   hasRetryable,
   hasSuccess,
   isProcessing,
+  onCancel,
   onClearAll,
   onDownloadZip,
   onRetryFailed,
@@ -32,18 +34,30 @@ export function ResultActions({
         <SummaryStat label="Total" value={summary.total} />
         <SummaryStat label="Success" value={summary.success} />
         <SummaryStat label="Failed" value={summary.failed} />
-        <SummaryStat label="Skipped" value={summary.skipped} />
+        <SummaryStat label="Skipped" value={summary.skipped + summary.cancelled} />
       </div>
       <div className="mt-5 grid gap-2 sm:grid-cols-2">
-        <button
-          className="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-stone-950 px-4 text-sm font-semibold text-white transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-50"
-          disabled={!hasFiles || disabled || isProcessing}
-          onClick={onUnlockAll}
-          type="button"
-        >
-          <Play aria-hidden="true" className="size-4" />
-          Unlock PDFs
-        </button>
+        {isProcessing ? (
+          <button
+            className="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-rose-700 px-4 text-sm font-semibold text-white transition hover:bg-rose-800 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={disabled}
+            onClick={onCancel}
+            type="button"
+          >
+            <Trash2 aria-hidden="true" className="size-4" />
+            Cancel processing
+          </button>
+        ) : (
+          <button
+            className="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-stone-950 px-4 text-sm font-semibold text-white transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={!hasFiles || disabled}
+            onClick={onUnlockAll}
+            type="button"
+          >
+            <Play aria-hidden="true" className="size-4" />
+            Unlock PDFs
+          </button>
+        )}
         <button
           className="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-stone-300 bg-white px-4 text-sm font-semibold text-stone-800 transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-50"
           disabled={!hasRetryable || disabled || isProcessing}
