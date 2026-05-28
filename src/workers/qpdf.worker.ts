@@ -105,6 +105,39 @@ function classifyFailure(id: string, messages: string[], fallbackCode = "unknown
   };
 }
 
+function inspectEncryption(qpdf: QpdfRuntime, inputPath: string): "encrypted" | "not-encrypted" | "unknown" {
+  qpdfMessages = [];
+
+  try {
+    const exitCode = qpdf.callMain(["--show-encryption", inputPath]);
+    const lowerText = qpdfMessages.join("\n").toLowerCase();
+
+    if (exitCode === 0 && lowerText.includes("file is not encrypted")) {
+      return "not-encrypted";
+    }
+
+    if (exitCode === 0) {
+      return "encrypted";
+    }
+
+    if (lowerText.includes("invalid password") || lowerText.includes("requires a password")) {
+      return "encrypted";
+    }
+  } catch {
+    const lowerText = qpdfMessages.join("\n").toLowerCase();
+
+    if (lowerText.includes("file is not encrypted")) {
+      return "not-encrypted";
+    }
+
+    if (lowerText.includes("invalid password") || lowerText.includes("requires a password")) {
+      return "encrypted";
+    }
+  }
+
+  return "unknown";
+}
+
 async function unlockPdf(request: UnlockWorkerRequest): Promise<UnlockWorkerResponse> {
   const qpdf = await getQpdf();
   const safeId = request.id.replace(/[^a-zA-Z0-9-]/g, "");
@@ -116,8 +149,38 @@ async function unlockPdf(request: UnlockWorkerRequest): Promise<UnlockWorkerResp
     cleanupFile(qpdf, outputPath);
 
     qpdf.FS.writeFile(inputPath, new Uint8Array(request.data));
-    qpdfMessages = [];
+    const encryptionState = inspectEncryption(qpdf, inputPath);
 
+    if (encryptionState === "not-encrypted") {
+      const outputBuffer = request.data.slice(0);
+
+      return {
+        type: "success",
+        id: request.id,
+        result: "already-unlocked",
+        output: outputBuffer,
+      };
+    }
+
+    if (!request.password && encryptionState === "encrypted") {
+      return {
+        type: "failure",
+        id: request.id,
+        code: "password-required",
+        message: "Password required",
+      };
+    }
+
+    if (!request.password) {
+      return {
+        type: "failure",
+        id: request.id,
+        code: "qpdf-error",
+        message: "Could not read PDF",
+      };
+    }
+
+    qpdfMessages = [];
     const exitCode = qpdf.callMain([`--password=${request.password}`, "--decrypt", inputPath, outputPath]);
 
     if (exitCode !== 0) {
@@ -132,6 +195,7 @@ async function unlockPdf(request: UnlockWorkerRequest): Promise<UnlockWorkerResp
     return {
       type: "success",
       id: request.id,
+      result: "unlocked",
       output: outputBuffer,
     };
   } catch {

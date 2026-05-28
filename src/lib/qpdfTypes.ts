@@ -2,20 +2,21 @@ export type UnlockWorkerRequest = {
   type: "unlock";
   id: string;
   fileName: string;
-  password: string;
+  password: string | null;
   data: ArrayBuffer;
 };
 
 export type UnlockWorkerSuccess = {
   type: "success";
   id: string;
+  result: "unlocked" | "already-unlocked";
   output: ArrayBuffer;
 };
 
 export type UnlockWorkerFailure = {
   type: "failure";
   id: string;
-  code: "wrong-password" | "unsupported" | "qpdf-error" | "cancelled" | "unknown";
+  code: "password-required" | "wrong-password" | "unsupported" | "qpdf-error" | "cancelled" | "unknown";
   message: string;
 };
 

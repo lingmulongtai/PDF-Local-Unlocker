@@ -30,9 +30,10 @@ export function ResultActions({
 }: ResultActionsProps) {
   return (
     <section className="rounded-lg border border-stone-200 bg-white/90 p-5 shadow-sm">
-      <div className="grid gap-3 sm:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2">
         <SummaryStat label="Total" value={summary.total} />
-        <SummaryStat label="Success" value={summary.success} />
+        <SummaryStat label="Unlocked" value={summary.success} />
+        <SummaryStat label="Already" value={summary.notEncrypted} />
         <SummaryStat label="Failed" value={summary.failed} />
         <SummaryStat label="Skipped" value={summary.skipped + summary.cancelled} />
       </div>

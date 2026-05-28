@@ -2,7 +2,12 @@ import type { UnlockWorkerFailure, UnlockWorkerRequest, UnlockWorkerResponse } f
 
 type PendingRequest = {
   reject: (error: UnlockWorkerFailure) => void;
-  resolve: (data: ArrayBuffer) => void;
+  resolve: (result: UnlockPdfResult) => void;
+};
+
+export type UnlockPdfResult = {
+  outcome: "unlocked" | "already-unlocked";
+  output: ArrayBuffer;
 };
 
 let worker: Worker | null = null;
@@ -28,7 +33,10 @@ function getWorker() {
     pending.delete(response.id);
 
     if (response.type === "success") {
-      request.resolve(response.output);
+      request.resolve({
+        outcome: response.result,
+        output: response.output,
+      });
     } else {
       request.reject(response);
     }
@@ -75,7 +83,7 @@ export function cancelActiveUnlocks() {
   worker = null;
 }
 
-export async function unlockPdfInWorker(file: File, password: string, id: string): Promise<ArrayBuffer> {
+export async function unlockPdfInWorker(file: File, password: string | null, id: string): Promise<UnlockPdfResult> {
   const data = await file.arrayBuffer();
   const request: UnlockWorkerRequest = {
     type: "unlock",

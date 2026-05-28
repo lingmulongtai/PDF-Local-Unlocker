@@ -7,7 +7,7 @@ export async function createResultsZip(items: FileItem[]): Promise<Blob> {
   const zip = new JSZip();
 
   for (const item of items) {
-    if (item.status === "success" && item.outputBlob && item.outputName) {
+    if ((item.status === "success" || item.status === "not-encrypted") && item.outputBlob && item.outputName) {
       zip.file(item.outputName, item.outputBlob);
     }
   }

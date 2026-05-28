@@ -7,7 +7,7 @@ import { PasswordPanel } from "./components/PasswordPanel";
 import { ResultActions } from "./components/ResultActions";
 import { SafetyNotice } from "./components/SafetyNotice";
 import { getBrowserSupportIssues } from "./lib/browserSupport";
-import { downloadBlob, makeUnlockedFileName } from "./lib/download";
+import { downloadBlob, makeAlreadyUnlockedFileName, makeUnlockedFileName } from "./lib/download";
 import { validatePdfFile } from "./lib/fileValidation";
 import { getPasswordForFile } from "./lib/password";
 import { cancelActiveUnlocks, unlockPdfInWorker } from "./lib/unlockWorkerClient";
@@ -43,6 +43,8 @@ export default function App() {
         counts.total += 1;
         if (item.status === "wrong-password") {
           counts.failed += 1;
+        } else if (item.status === "not-encrypted") {
+          counts.notEncrypted += 1;
         } else {
           counts[item.status] += 1;
         }
@@ -53,6 +55,7 @@ export default function App() {
         waiting: 0,
         processing: 0,
         success: 0,
+        notEncrypted: 0,
         failed: 0,
         skipped: 0,
         cancelled: 0,
@@ -69,7 +72,9 @@ export default function App() {
       item.status === "skipped" ||
       item.status === "cancelled",
   );
-  const hasSuccess = fileItems.some((item) => item.status === "success" && item.outputBlob);
+  const hasSuccess = fileItems.some(
+    (item) => (item.status === "success" || item.status === "not-encrypted") && item.outputBlob,
+  );
 
   function addFiles(files: File[]) {
     const accepted: FileItem[] = [];
@@ -156,7 +161,7 @@ export default function App() {
         );
       }
 
-      return item.status !== "success" && item.status !== "processing";
+      return item.status !== "success" && item.status !== "not-encrypted" && item.status !== "processing";
     });
 
     setIsProcessing(true);
@@ -171,16 +176,6 @@ export default function App() {
 
       const password = getPasswordForFile(item, commonPassword);
 
-      if (!password) {
-        updateItem(item.id, (current) => ({
-          ...current,
-          status: "skipped",
-          progress: 0,
-          errorMessage: "Password required",
-        }));
-        continue;
-      }
-
       updateItem(item.id, (current) => ({
         ...current,
         status: "processing",
@@ -189,7 +184,8 @@ export default function App() {
       }));
 
       try {
-        const output = await unlockPdfInWorker(item.file, password, item.id);
+        const result = await unlockPdfInWorker(item.file, password, item.id);
+        const output = result.output;
         const outputBlob = new Blob([output], { type: "application/pdf" });
 
         setFileItems((current) => {
@@ -199,17 +195,21 @@ export default function App() {
               .map((candidate) => candidate.outputName)
               .filter((name): name is string => Boolean(name)),
           );
-          const outputName = makeUnlockedFileName(item.name, reservedNames);
+          const outputName =
+            result.outcome === "already-unlocked"
+              ? makeAlreadyUnlockedFileName(item.name, reservedNames)
+              : makeUnlockedFileName(item.name, reservedNames);
+          const status = result.outcome === "already-unlocked" ? "not-encrypted" : "success";
 
           return current.map((candidate) =>
             candidate.id === item.id
               ? {
                   ...candidate,
-                  status: "success",
+                  status,
                   progress: 100,
                   outputBlob,
                   outputName,
-                  errorMessage: undefined,
+                  errorMessage: result.outcome === "already-unlocked" ? "No password needed" : undefined,
                   passwordOverride: "",
                   passwordVisible: false,
                 }
@@ -219,7 +219,13 @@ export default function App() {
       } catch (error) {
         const failure = error as { code?: string; message?: string };
         const status =
-          failure.code === "wrong-password" ? "wrong-password" : failure.code === "cancelled" ? "cancelled" : "failed";
+          failure.code === "wrong-password"
+            ? "wrong-password"
+            : failure.code === "password-required"
+              ? "skipped"
+              : failure.code === "cancelled"
+                ? "cancelled"
+                : "failed";
 
         updateItem(item.id, (current) => ({
           ...current,

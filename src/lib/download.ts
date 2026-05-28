@@ -17,6 +17,23 @@ export function makeUnlockedFileName(originalName: string, reservedNames = new S
   return candidate;
 }
 
+export function makeAlreadyUnlockedFileName(originalName: string, reservedNames = new Set<string>()): string {
+  if (!reservedNames.has(originalName)) {
+    return originalName;
+  }
+
+  const withoutPdf = originalName.replace(/\.pdf$/i, "");
+  let index = 2;
+  let candidate = `${withoutPdf}-${index}.pdf`;
+
+  while (reservedNames.has(candidate)) {
+    index += 1;
+    candidate = `${withoutPdf}-${index}.pdf`;
+  }
+
+  return candidate;
+}
+
 export function downloadBlob(blob: Blob, fileName: string): void {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");

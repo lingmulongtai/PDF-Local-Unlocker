@@ -26,7 +26,7 @@ export function FileRow({
   onTogglePasswordVisible,
   onUpdatePassword,
 }: FileRowProps) {
-  const canDownload = item.status === "success" && item.outputBlob;
+  const canDownload = (item.status === "success" || item.status === "not-encrypted") && item.outputBlob;
   const canRetry =
     item.status === "failed" ||
     item.status === "wrong-password" ||

@@ -18,6 +18,7 @@ PDF Local Unlocker は、正しいパスワードを知っているPDFをブラ�
 - wrong password / unsupported / qpdf error の基本分類を追加
 - 処理中にWorkerを停止できるキャンセル操作を追加
 - WebAssembly / Web Worker / Blob URL / crypto.randomUUID のブラウザ互換性チェックを追加
+- パスワードがかかっていないPDFを `Already unlocked` として認識し、パスワード不要で処理できるようにした
 
 ## できること
 
@@ -31,6 +32,7 @@ PDF Local Unlocker は、正しいパスワードを知っているPDFをブラ�
 - 成功ファイルをZIPで一括ダウンロードする
 - 処理中にキャンセルする
 - ブラウザがローカル処理に必要な機能を持っているか確認する
+- パスワードなしPDFを検出し、元PDFのままダウンロード/ZIP対象にする
 
 ## まだできないこと
 
@@ -39,6 +41,7 @@ PDF Local Unlocker は、正しいパスワードを知っているPDFをブラ�
 - 処理キャンセル
 - 処理キャンセル後の大きなPDFでのメモリ挙動確認
 - スマホ表示の詳細確認
+- パスワードなしPDFを含む複数PDFバッチの実ブラウザ確認
 
 ## セキュリティ方針
 
@@ -97,3 +100,4 @@ npm run preview
 4. スマホ表示を追加確認する
 5. qpdf-wasmのエラー分類を実PDFで増やす
 6. 大きめのPDFでキャンセル後の再試行を確認する
+7. パスワード付き/なし混在バッチを実ブラウザで確認する

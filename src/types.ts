@@ -2,6 +2,7 @@ export type FileStatus =
   | "waiting"
   | "processing"
   | "success"
+  | "not-encrypted"
   | "wrong-password"
   | "failed"
   | "skipped"
@@ -26,6 +27,7 @@ export type QueueSummary = {
   waiting: number;
   processing: number;
   success: number;
+  notEncrypted: number;
   failed: number;
   skipped: number;
   cancelled: number;
