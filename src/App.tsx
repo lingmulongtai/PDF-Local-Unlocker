@@ -1,9 +1,10 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CompatibilityNotice } from "./components/CompatibilityNotice";
 import { FileDropzone } from "./components/FileDropzone";
 import { FileQueue } from "./components/FileQueue";
 import { Hero } from "./components/Hero";
 import { PasswordPanel } from "./components/PasswordPanel";
+import { PdfPreview } from "./components/PdfPreview";
 import { ResultActions } from "./components/ResultActions";
 import { SafetyNotice } from "./components/SafetyNotice";
 import { getBrowserSupportIssues } from "./lib/browserSupport";
@@ -13,6 +14,14 @@ import { getPasswordForFile } from "./lib/password";
 import { cancelActiveUnlocks, unlockPdfInWorker } from "./lib/unlockWorkerClient";
 import { createResultsZip, RESULTS_ZIP_NAME } from "./lib/zip";
 import type { FileItem, QueueSummary } from "./types";
+
+type PreviewState = {
+  blob: Blob;
+  fileName: string;
+  itemId: string;
+  kind: "original" | "result";
+  url: string;
+};
 
 function createFileItem(file: File): FileItem {
   return {
@@ -32,6 +41,7 @@ export default function App() {
   const [commonPassword, setCommonPassword] = useState("");
   const [commonPasswordVisible, setCommonPasswordVisible] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [preview, setPreview] = useState<PreviewState | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const cancelRequestedRef = useRef(false);
   const browserSupportIssues = useMemo(() => getBrowserSupportIssues(), []);
@@ -75,6 +85,14 @@ export default function App() {
   const hasSuccess = fileItems.some(
     (item) => (item.status === "success" || item.status === "not-encrypted") && item.outputBlob,
   );
+
+  useEffect(() => {
+    return () => {
+      if (preview) {
+        URL.revokeObjectURL(preview.url);
+      }
+    };
+  }, [preview]);
 
   function addFiles(files: File[]) {
     const accepted: FileItem[] = [];
@@ -289,9 +307,52 @@ export default function App() {
     }
   }
 
+  function downloadFilesWithoutArchive() {
+    const downloadableItems = fileItems.filter(
+      (item) => (item.status === "success" || item.status === "not-encrypted") && item.outputBlob && item.outputName,
+    );
+
+    downloadableItems.forEach((item, index) => {
+      window.setTimeout(() => {
+        if (item.outputBlob && item.outputName) {
+          downloadBlob(item.outputBlob, item.outputName);
+        }
+      }, index * 160);
+    });
+
+    if (downloadableItems.length > 0) {
+      setNotice(`Started ${downloadableItems.length} PDF download${downloadableItems.length === 1 ? "" : "s"} without ZIP.`);
+    }
+  }
+
   async function downloadZip() {
     const zipBlob = await createResultsZip(fileItems);
     downloadBlob(zipBlob, RESULTS_ZIP_NAME);
+  }
+
+  function openPreview(id: string) {
+    const item = fileItems.find((candidate) => candidate.id === id);
+
+    if (!item) {
+      return;
+    }
+
+    const blob = item.outputBlob ?? item.file;
+    const fileName = item.outputName ?? item.name;
+    const kind = item.outputBlob ? "result" : "original";
+    const url = URL.createObjectURL(blob);
+
+    setPreview({
+      blob,
+      fileName,
+      itemId: item.id,
+      kind,
+      url,
+    });
+  }
+
+  function closePreview() {
+    setPreview(null);
   }
 
   return (
@@ -314,6 +375,7 @@ export default function App() {
               items={fileItems}
               onCopyCommonPassword={copyCommonPassword}
               onDownload={downloadFile}
+              onPreview={openPreview}
               onRemove={removeFile}
               onRetry={(id) => void processQueue("single", id)}
               onTogglePasswordVisible={toggleFilePasswordVisible}
@@ -338,6 +400,7 @@ export default function App() {
               isProcessing={isProcessing}
               onCancel={cancelProcessing}
               onClearAll={clearAll}
+              onDownloadFiles={downloadFilesWithoutArchive}
               onDownloadZip={() => void downloadZip()}
               onRetryFailed={() => void processQueue("retry")}
               onUnlockAll={() => void processQueue("all")}
@@ -356,6 +419,15 @@ export default function App() {
 
         <SafetyNotice />
       </main>
+      {preview ? (
+        <PdfPreview
+          fileName={preview.fileName}
+          kind={preview.kind}
+          onClose={closePreview}
+          onDownload={() => downloadBlob(preview.blob, preview.fileName)}
+          url={preview.url}
+        />
+      ) : null}
     </div>
   );
 }

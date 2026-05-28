@@ -1,4 +1,4 @@
-import { Copy, Download, Eye, EyeOff, FileText, RotateCcw, Trash2 } from "lucide-react";
+import { Copy, Download, Eye, EyeOff, FileSearch, FileText, RotateCcw, Trash2 } from "lucide-react";
 import { formatBytes } from "../lib/formatBytes";
 import type { FileItem } from "../types";
 import { ProgressPill } from "./ProgressPill";
@@ -9,6 +9,7 @@ type FileRowProps = {
   item: FileItem;
   onCopyCommonPassword: (id: string) => void;
   onDownload: (id: string) => void;
+  onPreview: (id: string) => void;
   onRemove: (id: string) => void;
   onRetry: (id: string) => void;
   onTogglePasswordVisible: (id: string) => void;
@@ -21,6 +22,7 @@ export function FileRow({
   item,
   onCopyCommonPassword,
   onDownload,
+  onPreview,
   onRemove,
   onRetry,
   onTogglePasswordVisible,
@@ -72,6 +74,15 @@ export function FileRow({
             type="button"
           >
             <RotateCcw aria-hidden="true" className="size-4" />
+          </button>
+          <button
+            className="inline-flex size-10 items-center justify-center rounded-lg border border-stone-300 bg-white text-stone-700 transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={disabled}
+            onClick={() => onPreview(item.id)}
+            title="Preview PDF"
+            type="button"
+          >
+            <FileSearch aria-hidden="true" className="size-4" />
           </button>
           <button
             className="inline-flex size-10 items-center justify-center rounded-lg border border-stone-300 bg-white text-stone-700 transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-50"

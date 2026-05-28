@@ -1,4 +1,4 @@
-import { Archive, Play, RefreshCw, Trash2 } from "lucide-react";
+import { Archive, Files, Play, RefreshCw, Trash2 } from "lucide-react";
 import type { QueueSummary } from "../types";
 
 type ResultActionsProps = {
@@ -10,6 +10,7 @@ type ResultActionsProps = {
   onClearAll: () => void;
   onCancel: () => void;
   onDownloadZip: () => void;
+  onDownloadFiles: () => void;
   onRetryFailed: () => void;
   onUnlockAll: () => void;
   summary: QueueSummary;
@@ -24,6 +25,7 @@ export function ResultActions({
   onCancel,
   onClearAll,
   onDownloadZip,
+  onDownloadFiles,
   onRetryFailed,
   onUnlockAll,
   summary,
@@ -67,6 +69,15 @@ export function ResultActions({
         >
           <RefreshCw aria-hidden="true" className="size-4" />
           Retry failed
+        </button>
+        <button
+          className="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-stone-300 bg-white px-4 text-sm font-semibold text-stone-800 transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={!hasSuccess || disabled || isProcessing}
+          onClick={onDownloadFiles}
+          type="button"
+        >
+          <Files aria-hidden="true" className="size-4" />
+          Download PDFs
         </button>
         <button
           className="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-stone-300 bg-white px-4 text-sm font-semibold text-stone-800 transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-50"

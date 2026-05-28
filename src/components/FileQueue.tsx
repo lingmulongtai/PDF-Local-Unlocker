@@ -7,6 +7,7 @@ type FileQueueProps = {
   items: FileItem[];
   onCopyCommonPassword: (id: string) => void;
   onDownload: (id: string) => void;
+  onPreview: (id: string) => void;
   onRemove: (id: string) => void;
   onRetry: (id: string) => void;
   onTogglePasswordVisible: (id: string) => void;
@@ -19,6 +20,7 @@ export function FileQueue({
   items,
   onCopyCommonPassword,
   onDownload,
+  onPreview,
   onRemove,
   onRetry,
   onTogglePasswordVisible,
@@ -42,6 +44,7 @@ export function FileQueue({
           key={item.id}
           onCopyCommonPassword={onCopyCommonPassword}
           onDownload={onDownload}
+          onPreview={onPreview}
           onRemove={onRemove}
           onRetry={onRetry}
           onTogglePasswordVisible={onTogglePasswordVisible}
