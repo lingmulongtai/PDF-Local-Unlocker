@@ -64,3 +64,36 @@ Worker型とプレースホルダーを先に作り、実処理は次フェー�
 
 - qpdf-wasmのAPIがWorker向きでない場合
 - 別のqpdf-wasmパッケージのほうが安定していると分かった場合
+
+## 2026-05-28 - GitHub Pagesを公式Pages Actionsでデプロイする
+
+### 背景
+
+GitHub Pagesの公開設定がActionsベースで有効になったため、コミットごとにViteのビルド成果物を自動公開する必要がある。
+
+### 選択肢
+
+1. GitHub公式の `configure-pages` / `upload-pages-artifact` / `deploy-pages` を使う
+2. `gh-pages` ブランチへビルド成果物をコミットする
+3. サードパーティのPagesデプロイActionを使う
+
+### 採用した案
+
+GitHub公式のPages Actionsを使う。
+
+### 理由
+
+- GitHub DocsでカスタムPagesワークフローとして案内されている
+- `dist/` をartifactとしてアップロードし、Pages環境へ直接デプロイできる
+- ビルド成果物をリポジトリの別ブランチへコミットしなくてよい
+- `pages: write` と `id-token: write` の最小限のPages権限で運用できる
+
+### 採用しなかった案と理由
+
+- `gh-pages` ブランチ運用は履歴にビルド成果物が増え、管理対象が広がる
+- サードパーティActionは今回の要件では不要
+
+### 今後見直す条件
+
+- GitHub公式Actionのメジャーバージョンが更新された場合
+- リポジトリのデフォルトブランチが `main` / `master` 以外になる場合

@@ -13,6 +13,7 @@ PDF Local Unlocker は、正しいパスワードを知っているPDFをブラ�
 - qpdf-wasm実処理は未接続のため、現時点のUnlock操作は「Unlock engine pending」を表示する
 - devlog / decisions / TODO の初期ファイルを追加
 - 初期画面スクリーンショット: `docs/devlog/2026-05-28-home.png`
+- GitHub ActionsでコミットごとにGitHub Pagesへ自動デプロイするワークフローを追加
 
 ## できること
 
@@ -28,7 +29,7 @@ PDF Local Unlocker は、正しいパスワードを知っているPDFをブラ�
 - 実際のPDFパスワード解除
 - qpdf-wasm Workerによる復号処理
 - 間違ったパスワードと未対応PDFの実判定
-- GitHub Pagesへの自動デプロイ
+- GitHub Pagesへの自動デプロイは `main` / `master` へのpushで実行される
 
 ## セキュリティ方針
 
@@ -56,7 +57,8 @@ npm run preview
 
 - Viteの `base` は静的公開しやすいように `./` に設定
 - `npm run build` で `dist/` を生成
-- GitHub ActionsによるPages公開は今後追加予定
+- `.github/workflows/deploy.yml` が `main` / `master` へのpushごとに `dist/` をGitHub Pagesへデプロイ
+- 手動再実行用に `workflow_dispatch` も有効
 - 公開前にブラウザのNetworkでPDFが外部送信されないことを確認する
 
 ## 使用ライブラリ
@@ -85,4 +87,4 @@ npm run preview
 3. 間違ったパスワード時のエラー分類を実装する
 4. 複数PDFの順次処理と成功ファイルのBlob保存を実装する
 5. ZIP一括ダウンロードを実データに接続する
-6. GitHub Pagesデプロイを追加する
+6. GitHub Actions上でPagesデプロイが成功することを確認する

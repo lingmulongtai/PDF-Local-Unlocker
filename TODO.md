@@ -45,6 +45,7 @@
 
 ## Phase 5: 公開
 
-- [ ] GitHub Actionsを追加する
-- [ ] GitHub Pagesで公開する
+- [x] GitHub Actionsを追加する
+- [ ] GitHub Actions上でPagesデプロイ成功を確認する
+- [ ] GitHub Pagesで公開URLを確認する
 - [ ] 公開URLをREADMEに追記する
