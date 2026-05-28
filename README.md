@@ -9,11 +9,13 @@ PDF Local Unlocker は、正しいパスワードを知っているPDFをブラ�
 - Vite + React + TypeScript + Tailwind CSS の初期構成を作成
 - ドラッグ&ドロップ、複数PDFキュー、共通パスワード、ファイル別パスワード入力のUIモックを実装
 - 個別ダウンロード、ZIPダウンロード、再試行ボタンの導線を配置
-- qpdf-wasm 用のWorker型とプレースホルダーを追加
-- qpdf-wasm実処理は未接続のため、現時点のUnlock操作は「Unlock engine pending」を表示する
+- qpdf-wasm 用のWorker型と実行処理を追加
 - devlog / decisions / TODO の初期ファイルを追加
 - 初期画面スクリーンショット: `docs/devlog/2026-05-28-home.png`
 - GitHub ActionsでコミットごとにGitHub Pagesへ自動デプロイするワークフローを追加
+- qpdf-wasmをWeb Workerに接続し、既知パスワードによるPDF解除処理を実装
+- 成功したPDFをBlobとして保持し、個別ダウンロードとZIP一括ダウンロードの対象にする処理を接続
+- wrong password / unsupported / qpdf error の基本分類を追加
 
 ## できること
 
@@ -22,14 +24,16 @@ PDF Local Unlocker は、正しいパスワードを知っているPDFをブラ�
 - ファイルごとに別パスワードを入力する
 - 共通パスワードを特定ファイルへコピーする
 - ファイルごとの状態を確認する
-- 成功ファイルの個別ダウンロードとZIP一括ダウンロードのUIを使う
+- 正しい既知パスワードでPDFのパスワード解除を実行する
+- 成功ファイルを個別ダウンロードする
+- 成功ファイルをZIPで一括ダウンロードする
 
 ## まだできないこと
 
-- 実際のPDFパスワード解除
-- qpdf-wasm Workerによる復号処理
-- 間違ったパスワードと未対応PDFの実判定
-- GitHub Pagesへの自動デプロイは `main` / `master` へのpushで実行される
+- GitHub Actions上でのPagesデプロイ成功確認
+- すべてのPDF暗号化方式への対応保証
+- 処理キャンセル
+- スマホ表示の詳細確認
 
 ## セキュリティ方針
 
@@ -82,9 +86,9 @@ npm run preview
 
 ## 今後の予定
 
-1. qpdf-wasmをWeb Worker内で初期化する
-2. 1ファイルのパスワード解除を成功させる
-3. 間違ったパスワード時のエラー分類を実装する
-4. 複数PDFの順次処理と成功ファイルのBlob保存を実装する
-5. ZIP一括ダウンロードを実データに接続する
-6. GitHub Actions上でPagesデプロイが成功することを確認する
+1. ブラウザ上で複数の実PDFサンプルを使って解除結果を確認する
+2. GitHub Actions上でPagesデプロイが成功することを確認する
+3. 公開URLをREADMEに追記する
+4. スマホ表示を追加確認する
+5. qpdf-wasmのエラー分類を実PDFで増やす
+6. 処理キャンセルを検討する

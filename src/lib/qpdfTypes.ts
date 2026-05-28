@@ -9,13 +9,13 @@ export type UnlockWorkerRequest = {
 export type UnlockWorkerSuccess = {
   type: "success";
   id: string;
-  output: Uint8Array;
+  output: ArrayBuffer;
 };
 
 export type UnlockWorkerFailure = {
   type: "failure";
   id: string;
-  code: "wrong-password" | "unsupported" | "worker-not-ready" | "unknown";
+  code: "wrong-password" | "unsupported" | "qpdf-error" | "unknown";
   message: string;
 };
 

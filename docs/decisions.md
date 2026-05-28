@@ -97,3 +97,67 @@ GitHub公式のPages Actionsを使う。
 
 - GitHub公式Actionのメジャーバージョンが更新された場合
 - リポジトリのデフォルトブランチが `main` / `master` 以外になる場合
+
+## 2026-05-28 - qpdf.wasmはVite asset URLとしてWorkerにバンドルする
+
+### 背景
+
+qpdf-wasmはJavaScript本体と `qpdf.wasm` を別ファイルとして配布している。GitHub Pages配下でもパスが崩れないように、Workerから安定してWASMを参照する必要がある。
+
+### 選択肢
+
+1. `public/wasm/qpdf.wasm` に手動コピーして固定パスで読む
+2. `@neslinesli93/qpdf-wasm/dist/qpdf.wasm?url` としてViteにasset管理させる
+3. CDNからWASMを読む
+
+### 採用した案
+
+Viteの `?url` asset importで `qpdf.wasm` をWorkerにバンドルする。
+
+### 理由
+
+- GitHub PagesのサブパスでもViteが正しいURLに変換できる
+- 依存ファイルをCDNへ取りに行かないため、ローカル処理という説明と矛盾しにくい
+- `public/` に手動コピーする運用が不要になる
+
+### 採用しなかった案と理由
+
+- `public/wasm` 固定配置は重複管理になりやすい
+- CDN利用は公開版のプライバシー説明と相性が悪い
+
+### 今後見直す条件
+
+- qpdf-wasmのパッケージ構成が変わった場合
+- GitHub Pages上でWASMのMIME typeや読み込みに問題が出た場合
+
+## 2026-05-28 - qpdfの標準出力と標準エラーはWorker内で捕捉する
+
+### 背景
+
+qpdf-wasmはqpdfの標準出力と標準エラーを `console.log` / `console.error` に流す実装になっている。エラー文にパスワードが出る想定ではないが、パスワードをログに残さない方針を強く守る必要がある。
+
+### 選択肢
+
+1. qpdfの出力をそのままブラウザコンソールへ流す
+2. Worker初期化時にconsole出力を捕捉し、UI向けの安全なエラー文へ変換する
+3. qpdfの出力を完全に捨てる
+
+### 採用した案
+
+Worker初期化時にqpdfのconsole出力を捕捉し、分類にだけ使う。
+
+### 理由
+
+- パスワードやファイル内容をブラウザコンソールへ残さない
+- `invalid password` などの出力を安全なUI文言へ変換できる
+- 詳細ログを保存しない方針を維持できる
+
+### 採用しなかった案と理由
+
+- そのままコンソールへ流す案は、ログを残さない方針と合わない
+- 完全に捨てる案は、wrong passwordなどの分類精度が落ちる
+
+### 今後見直す条件
+
+- qpdf-wasmが出力制御APIを提供した場合
+- エラー分類をより細かくする必要が出た場合

@@ -5,9 +5,10 @@ import { Hero } from "./components/Hero";
 import { PasswordPanel } from "./components/PasswordPanel";
 import { ResultActions } from "./components/ResultActions";
 import { SafetyNotice } from "./components/SafetyNotice";
-import { downloadBlob } from "./lib/download";
+import { downloadBlob, makeUnlockedFileName } from "./lib/download";
 import { validatePdfFile } from "./lib/fileValidation";
 import { getPasswordForFile } from "./lib/password";
+import { unlockPdfInWorker } from "./lib/unlockWorkerClient";
 import { createResultsZip, RESULTS_ZIP_NAME } from "./lib/zip";
 import type { FileItem, QueueSummary } from "./types";
 
@@ -24,10 +25,6 @@ function createFileItem(file: File): FileItem {
   };
 }
 
-function delay(milliseconds: number) {
-  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
-}
-
 export default function App() {
   const [fileItems, setFileItems] = useState<FileItem[]>([]);
   const [commonPassword, setCommonPassword] = useState("");
@@ -36,10 +33,14 @@ export default function App() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const summary = useMemo<QueueSummary>(() => {
-    return fileItems.reduce(
+    const counts = fileItems.reduce(
       (counts, item) => {
         counts.total += 1;
-        counts[item.status] += 1;
+        if (item.status === "wrong-password") {
+          counts.failed += 1;
+        } else {
+          counts[item.status] += 1;
+        }
         return counts;
       },
       {
@@ -49,9 +50,10 @@ export default function App() {
         success: 0,
         failed: 0,
         skipped: 0,
-        "wrong-password": 0,
-      } as QueueSummary & { "wrong-password": number },
+      } as QueueSummary,
     );
+
+    return counts;
   }, [fileItems]);
 
   const hasRetryable = fileItems.some(
@@ -143,7 +145,7 @@ export default function App() {
     });
 
     setIsProcessing(true);
-    setNotice("qpdf-wasm is installed for the project, but worker wiring is scheduled for the next phase.");
+    setNotice(null);
 
     for (const item of candidates) {
       const password = getPasswordForFile(item, commonPassword);
@@ -161,18 +163,49 @@ export default function App() {
       updateItem(item.id, (current) => ({
         ...current,
         status: "processing",
-        progress: 35,
+        progress: 20,
         errorMessage: undefined,
       }));
 
-      await delay(220);
+      try {
+        const output = await unlockPdfInWorker(item.file, password, item.id);
+        const outputBlob = new Blob([output], { type: "application/pdf" });
 
-      updateItem(item.id, (current) => ({
-        ...current,
-        status: "failed",
-        progress: 100,
-        errorMessage: "Unlock engine pending",
-      }));
+        setFileItems((current) => {
+          const reservedNames = new Set(
+            current
+              .filter((candidate) => candidate.id !== item.id)
+              .map((candidate) => candidate.outputName)
+              .filter((name): name is string => Boolean(name)),
+          );
+          const outputName = makeUnlockedFileName(item.name, reservedNames);
+
+          return current.map((candidate) =>
+            candidate.id === item.id
+              ? {
+                  ...candidate,
+                  status: "success",
+                  progress: 100,
+                  outputBlob,
+                  outputName,
+                  errorMessage: undefined,
+                  passwordOverride: "",
+                  passwordVisible: false,
+                }
+              : candidate,
+          );
+        });
+      } catch (error) {
+        const failure = error as { code?: string; message?: string };
+        const status = failure.code === "wrong-password" ? "wrong-password" : "failed";
+
+        updateItem(item.id, (current) => ({
+          ...current,
+          status,
+          progress: 100,
+          errorMessage: failure.message ?? "PDF unlock failed",
+        }));
+      }
     }
 
     setIsProcessing(false);
