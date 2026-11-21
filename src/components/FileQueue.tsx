@@ -28,8 +28,8 @@ export function FileQueue({
 }: FileQueueProps) {
   if (items.length === 0) {
     return (
-      <section className="rounded-lg border border-stone-200 bg-white/80 p-5 text-sm text-stone-600 shadow-sm">
-        The queue is empty.
+      <section className="rounded-xl border border-zinc-200 bg-white px-5 py-6 text-sm text-zinc-500">
+        No files queued yet. Drop or select one or more encrypted PDFs above to start.
       </section>
     );
   }

@@ -356,16 +356,16 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(135deg,#f7f7f2_0%,#e8f7ef_44%,#fff7ed_100%)] text-stone-950">
-      <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
-        <Hero />
+    <div className="min-h-screen bg-[#fafafa] text-zinc-950">
+      <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
+        <Hero canProcess={canProcess} />
         <CompatibilityNotice issues={browserSupportIssues} />
 
-        <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
-          <div className="space-y-5">
+        <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="space-y-4">
             <FileDropzone disabled={isProcessing || !canProcess} onFilesSelected={addFiles} />
             {notice ? (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              <div className="rounded-lg border border-amber-300/70 bg-amber-50/70 px-4 py-3 text-sm text-amber-950">
                 {notice}
               </div>
             ) : null}
@@ -383,7 +383,7 @@ export default function App() {
             />
           </div>
 
-          <aside className="space-y-5 lg:sticky lg:top-6 lg:self-start">
+          <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
             <PasswordPanel
               commonPassword={commonPassword}
               disabled={isProcessing}
@@ -407,7 +407,7 @@ export default function App() {
               summary={summary}
             />
             <button
-              className="inline-flex h-11 w-full items-center justify-center rounded-lg border border-stone-300 bg-white/90 px-4 text-sm font-semibold text-stone-800 shadow-sm transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-10 w-full items-center justify-center rounded-lg border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-300 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-45"
               disabled={isProcessing || (commonPassword.length === 0 && fileItems.every((item) => item.passwordOverride.length === 0))}
               onClick={clearPasswordsOnly}
               type="button"

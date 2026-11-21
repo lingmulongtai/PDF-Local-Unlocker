@@ -1,46 +1,27 @@
-import { motion } from "framer-motion";
-import { Ban, Files, Laptop, ShieldCheck } from "lucide-react";
-import { PrivacyBadge } from "./PrivacyBadge";
+import { ShieldCheck } from "lucide-react";
 
-export function Hero() {
+type HeroProps = {
+  canProcess?: boolean;
+};
+
+export function Hero({ canProcess = true }: HeroProps) {
   return (
-    <header className="grid gap-6 lg:grid-cols-[1fr_360px] lg:items-end">
-      <motion.div
-        animate={{ opacity: 1, y: 0 }}
-        className="space-y-5"
-        initial={{ opacity: 0, y: 12 }}
-        transition={{ duration: 0.35, ease: "easeOut" }}
-      >
-        <div className="inline-flex items-center gap-2 rounded-lg border border-stone-200 bg-white/85 px-3 py-1.5 text-sm font-medium text-stone-700 shadow-sm">
-          <ShieldCheck aria-hidden="true" className="size-4 text-emerald-600" />
-          Files never leave your device
-        </div>
-        <div className="max-w-3xl space-y-3">
-          <h1 className="text-4xl font-semibold tracking-normal text-stone-950 sm:text-5xl">
-            PDF Local Unlocker
-          </h1>
-          <p className="max-w-2xl text-base leading-7 text-stone-600 sm:text-lg">
-            Remove known PDF passwords in your browser, with batch controls and no upload step.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <PrivacyBadge icon={Laptop} label="Browser memory only" />
-          <PrivacyBadge icon={Ban} label="No account" tone="stone" />
-          <PrivacyBadge icon={Files} label="Batch queue" tone="amber" />
-        </div>
-      </motion.div>
-      <div className="rounded-lg border border-emerald-200 bg-white/80 p-4 shadow-sm backdrop-blur">
-        <div className="flex items-start gap-3">
-          <div className="rounded-lg bg-emerald-100 p-2 text-emerald-700">
-            <ShieldCheck aria-hidden="true" className="size-5" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-stone-950">Local-first safety</p>
-            <p className="mt-1 text-sm leading-6 text-stone-600">
-              Use only PDFs you own or are authorized to unlock. Passwords are not persisted.
-            </p>
-          </div>
-        </div>
+    <header className="flex flex-col gap-4 border-b border-zinc-200 pb-6 sm:flex-row sm:items-end sm:justify-between">
+      <div className="space-y-1.5">
+        <h1 className="text-2xl font-medium tracking-[-0.025em] text-zinc-950 sm:text-3xl">
+          PDF Local Unlocker
+        </h1>
+        <p className="max-w-xl text-sm leading-6 text-zinc-600">
+          Remove known PDF passwords directly in your browser using qpdf WebAssembly. Files never leave this tab.
+        </p>
+      </div>
+      <div className="inline-flex shrink-0 items-center gap-2 self-start rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 sm:self-auto">
+        <ShieldCheck
+          aria-hidden="true"
+          className={`size-4 ${canProcess ? "text-emerald-700" : "text-rose-600"}`}
+          strokeWidth={1.5}
+        />
+        <span>{canProcess ? "Browser WASM ready · Offline only" : "Browser features missing"}</span>
       </div>
     </header>
   );
