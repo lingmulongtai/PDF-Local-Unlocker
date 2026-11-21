@@ -7,7 +7,7 @@ type ProgressPillProps = {
 
 const statusConfig = {
   waiting: {
-    className: "border-stone-200 bg-stone-50 text-stone-700",
+    className: "border-zinc-200 bg-zinc-50 text-zinc-700",
     icon: CircleDashed,
     label: "Waiting",
   },
@@ -17,12 +17,12 @@ const statusConfig = {
     label: "Processing",
   },
   success: {
-    className: "border-teal-200 bg-teal-50 text-teal-800",
+    className: "border-emerald-200 bg-emerald-50 text-emerald-800",
     icon: CheckCircle2,
-    label: "Success",
+    label: "Unlocked",
   },
   "not-encrypted": {
-    className: "border-sky-200 bg-sky-50 text-sky-800",
+    className: "border-zinc-200 bg-zinc-50 text-zinc-700",
     icon: CheckCircle2,
     label: "Already unlocked",
   },
@@ -37,12 +37,12 @@ const statusConfig = {
     label: "Failed",
   },
   skipped: {
-    className: "border-stone-200 bg-stone-50 text-stone-700",
+    className: "border-zinc-200 bg-zinc-50 text-zinc-700",
     icon: AlertTriangle,
     label: "Skipped",
   },
   cancelled: {
-    className: "border-stone-200 bg-stone-50 text-stone-700",
+    className: "border-zinc-200 bg-zinc-50 text-zinc-700",
     icon: AlertTriangle,
     label: "Cancelled",
   },
@@ -54,9 +54,13 @@ export function ProgressPill({ status }: ProgressPillProps) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold ${config.className}`}
+      className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs font-medium ${config.className}`}
     >
-      <Icon aria-hidden="true" className={`size-3.5 ${status === "processing" ? "animate-spin" : ""}`} />
+      <Icon
+        aria-hidden="true"
+        className={`size-3.5 ${status === "processing" ? "animate-spin" : ""}`}
+        strokeWidth={1.5}
+      />
       {config.label}
     </span>
   );

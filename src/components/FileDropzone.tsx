@@ -20,10 +20,10 @@ export function FileDropzone({ disabled = false, onFilesSelected }: FileDropzone
 
   return (
     <section
-      className={`rounded-lg border border-dashed p-6 transition ${
+      className={`rounded-xl border border-dashed p-8 transition-colors ${
         isDragging
-          ? "border-emerald-400 bg-emerald-50"
-          : "border-stone-300 bg-white/85 hover:border-emerald-300"
+          ? "border-emerald-700 bg-emerald-50/40"
+          : "border-zinc-300 bg-white hover:border-zinc-400"
       }`}
       onDragEnter={(event) => {
         event.preventDefault();
@@ -41,16 +41,16 @@ export function FileDropzone({ disabled = false, onFilesSelected }: FileDropzone
       }}
     >
       <div className="flex flex-col items-center justify-center gap-4 text-center">
-        <div className="rounded-lg bg-emerald-100 p-3 text-emerald-700">
-          <UploadCloud aria-hidden="true" className="size-7" />
+        <div className="inline-flex size-10 items-center justify-center rounded-lg border border-zinc-200 bg-zinc-50 text-zinc-700">
+          <UploadCloud aria-hidden="true" className="size-5" strokeWidth={1.5} />
         </div>
-        <div>
-          <h2 className="text-lg font-semibold text-stone-950">Drop PDF files</h2>
-          <p className="mt-1 text-sm text-stone-600">Multiple files are accepted. Non-PDF files are ignored.</p>
+        <div className="space-y-1">
+          <h2 className="text-base font-medium text-zinc-950">Drop PDF files</h2>
+          <p className="text-sm text-zinc-500">Multiple files accepted up to 100 MB each. Non-PDF files are ignored.</p>
         </div>
         <label
-          className={`inline-flex cursor-pointer items-center justify-center rounded-lg bg-stone-950 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-stone-800 ${
-            disabled ? "pointer-events-none opacity-50" : ""
+          className={`inline-flex h-10 cursor-pointer items-center justify-center rounded-lg bg-zinc-950 px-4 text-sm font-medium text-white transition-colors hover:bg-zinc-800 ${
+            disabled ? "pointer-events-none opacity-45" : ""
           }`}
           htmlFor={inputId}
         >
